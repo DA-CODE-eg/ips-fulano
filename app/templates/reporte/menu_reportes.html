@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-file-earmark-bar-graph"></i> Centro de Reportes</h2>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver al Dashboard
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Reporte de Pacientes -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm hover-card">
+                <div class="card-header bg-danger text-white text-center">
+                    <i class="bi bi-people-fill" style="font-size: 2rem;"></i>
+                    <h5 class="mt-2 mb-0">Reporte de Pacientes</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Genera un reporte completo con todos los pacientes registrados en el sistema, 
+                        incluyendo información de contacto y estado.
+                    </p>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success"></i> Listado completo</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Datos de contacto</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Estados activos/inactivos</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Estadísticas generales</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{{ url_for('main.reporte_pacientes_pdf') }}" 
+                       class="btn btn-danger w-100" 
+                       target="_blank">
+                        <i class="bi bi-file-pdf"></i> Generar PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reporte de Citas -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm hover-card">
+                <div class="card-header bg-success text-white text-center">
+                    <i class="bi bi-calendar-check" style="font-size: 2rem;"></i>
+                    <h5 class="mt-2 mb-0">Reporte de Citas</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Consulta todas las citas médicas programadas, con detalles de pacientes, 
+                        médicos, especialidades y estados.
+                    </p>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success"></i> Todas las citas</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Información de médicos</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Estados de las citas</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Estadísticas por estado</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{{ url_for('main.reporte_citas_pdf') }}" 
+                       class="btn btn-success w-100" 
+                       target="_blank">
+                        <i class="bi bi-file-pdf"></i> Generar PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reporte de Especialidades (solo admin) -->
+        {% if current_user.rol == 'admin' %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm hover-card">
+                <div class="card-header bg-warning text-dark text-center">
+                    <i class="bi bi-heart-pulse" style="font-size: 2rem;"></i>
+                    <h5 class="mt-2 mb-0">Reporte de Especialidades</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Reporte administrativo de todas las especialidades médicas disponibles 
+                        y su uso en el sistema.
+                    </p>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle text-success"></i> Todas las especialidades</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Citas por especialidad</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Médicos asignados</li>
+                        <li><i class="bi bi-check-circle text-success"></i> Estadísticas de uso</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{{ url_for('main.reporte_especialidades_pdf') }}" 
+                       class="btn btn-warning w-100" 
+                       target="_blank">
+                        <i class="bi bi-file-pdf"></i> Generar PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Información adicional -->
+    <div class="alert alert-info mt-4">
+        <h5><i class="bi bi-info-circle"></i> Información sobre los Reportes</h5>
+        <ul class="mb-0">
+            <li>Los reportes se generan en formato PDF para facilitar su impresión y distribución.</li>
+            <li>Cada reporte incluye la fecha y hora de generación.</li>
+            <li>Los datos se extraen en tiempo real desde la base de datos.</li>
+            <li>Los reportes se abren en una nueva pestaña del navegador.</li>
+        </ul>
+    </div>
+
+    <!-- Estadísticas rápidas -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4 class="mb-3"><i class="bi bi-graph-up"></i> Estadísticas Rápidas</h4>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-primary">
+                <div class="card-body text-center">
+                    <h2>{{ stats.total_pacientes }}</h2>
+                    <p class="mb-0">Total Pacientes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-success">
+                <div class="card-body text-center">
+                    <h2>{{ stats.total_citas }}</h2>
+                    <p class="mb-0">Total Citas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h2>{{ stats.total_especialidades }}</h2>
+                    <p class="mb-0">Especialidades</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-info">
+                <div class="card-body text-center">
+                    <h2>{{ stats.citas_pendientes }}</h2>
+                    <p class="mb-0">Citas Pendientes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+}
+</style>
+{% endblock %}

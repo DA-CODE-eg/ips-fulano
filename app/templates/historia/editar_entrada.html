@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Entrada - {{ paciente.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="mb-0">
+                        <i class="bi bi-pencil-square"></i> Editar Entrada de Historia Clínica
+                    </h4>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{{ url_for('main.historia_clinica', id=paciente.id) }}" class="btn btn-light btn-sm">
+                        <i class="bi bi-arrow-left"></i> Volver a Historia
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <strong><i class="bi bi-person"></i> Paciente:</strong><br>
+                    {{ paciente.nombre }}
+                </div>
+                <div class="col-md-3">
+                    <strong><i class="bi bi-calendar"></i> Fecha de Entrada:</strong><br>
+                    {{ entrada.fecha.strftime('%d/%m/%Y %H:%M') }}
+                </div>
+                <div class="col-md-3">
+                    <strong><i class="bi bi-person-badge"></i> Autor:</strong><br>
+                    {{ entrada.autor.nombre }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-pencil"></i> Editar Contenido</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="contenido" class="form-label">
+                                <strong>Contenido de la Entrada</strong>
+                            </label>
+                            <textarea
+                                name="contenido"
+                                id="contenido"
+                                rows="15"
+                                class="form-control font-monospace"
+                                required>{{ entrada.contenido }}</textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Guardar Cambios
+                            </button>
+                            <a href="{{ url_for('main.historia_clinica', id=paciente.id) }}" class="btn btn-secondary">
+                                <i class="bi bi-x"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

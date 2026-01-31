@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}Historia Clínica - {{ paciente.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header con información del paciente -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="mb-0">
+                        <i class="bi bi-file-medical"></i> Historia Clínica
+                    </h4>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{{ url_for('main.lista_pacientes') }}" class="btn btn-light btn-sm">
+                        <i class="bi bi-arrow-left"></i> Volver a Pacientes
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <strong><i class="bi bi-person"></i> Paciente:</strong><br>
+                    {{ paciente.nombre }}
+                </div>
+                <div class="col-md-2">
+                    <strong><i class="bi bi-card-text"></i> Identificación:</strong><br>
+                    {{ paciente.identificacion }}
+                </div>
+                <div class="col-md-2">
+                    <strong><i class="bi bi-calendar"></i> Fecha Nacimiento:</strong><br>
+                    {{ paciente.fecha_nacimiento.strftime('%d/%m/%Y') if paciente.fecha_nacimiento else 'No registrada' }}
+                </div>
+                <div class="col-md-2">
+                    <strong><i class="bi bi-gender-ambiguous"></i> Sexo:</strong><br>
+                    {{ paciente.sexo or 'No registrado' }}
+                </div>
+                <div class="col-md-3">
+                    <strong><i class="bi bi-telephone"></i> Teléfono:</strong><br>
+                    {{ paciente.telefono or 'No registrado' }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Lista de Entradas de Historia Clínica -->
+        <div class="col-md-8">
+            <!-- Formulario para agregar nueva entrada -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Agregar Nueva Entrada</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="formNuevaEntrada">
+                        <div class="mb-3">
+                            <label for="contenido" class="form-label">
+                                <strong>Contenido de la Nueva Entrada</strong>
+                            </label>
+                            <textarea
+                                name="contenido"
+                                id="contenido"
+                                rows="10"
+                                class="form-control font-monospace"
+                                placeholder="Escriba aquí la nueva entrada para la historia clínica...
+
+Ejemplo de estructura:
+
+MOTIVO DE CONSULTA:
+[Descripción del motivo]
+
+EXAMEN FÍSICO:
+[Hallazgos del examen]
+
+DIAGNÓSTICO:
+[Diagnóstico]
+
+TRATAMIENTO:
+[Tratamiento indicado]
+
+OBSERVACIONES:
+[Notas adicionales]" required></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" id="btnAgregar">
+                                <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                <i class="bi bi-save"></i> Agregar Entrada
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Lista de entradas existentes -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Entradas de la Historia Clínica</h5>
+                    <div>
+                        <a href="{{ url_for('main.imprimir_historia', id=paciente.id) }}"
+                           target="_blank"
+                           class="btn btn-success btn-sm"
+                           {% if not entradas %}disabled{% endif %}>
+                            <i class="bi bi-printer"></i> Imprimir PDF
+                        </a>
+                        <a href="{{ url_for('main.descargar_historia', id=paciente.id) }}"
+                           class="btn btn-info btn-sm"
+                           {% if not entradas %}disabled{% endif %}>
+                            <i class="bi bi-download"></i> Descargar PDF
+                        </a>
+                        <a href="{{ url_for('main.imprimir_historia', id=paciente.id, solo_recientes=1) }}"
+                           target="_blank"
+                           class="btn btn-warning btn-sm"
+                           {% if not entradas %}disabled{% endif %}>
+                            <i class="bi bi-clock"></i> Imprimir Recientes
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if entradas %}
+                    <div class="timeline">
+                        {% for entrada in entradas %}
+                        <div class="timeline-item mb-4 pb-4 border-bottom">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <strong>{{ entrada.autor.nombre }}</strong>
+                                    <small class="text-muted">({{ entrada.autor.rol }})</small>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar"></i> {{ entrada.fecha.strftime('%d/%m/%Y %H:%M') }}
+                                    </small>
+                                </div>
+                                {% if entrada.autor_id == current_user.id %}
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('main.editar_entrada_historia', id=paciente.id, entrada_id=entrada.id) }}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </a>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger"
+                                            onclick="eliminarEntrada({{ entrada.id }}, '{{ paciente.nombre }}')">
+                                        <i class="bi bi-trash"></i> Eliminar
+                                    </button>
+                                    <form id="formEliminar{{ entrada.id }}"
+                                          action="{{ url_for('main.eliminar_entrada_historia', id=paciente.id, entrada_id=entrada.id) }}"
+                                          method="POST"
+                                          style="display: none;">
+                                    </form>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="entrada-contenido">
+                                <pre class="border p-3 bg-light" style="white-space: pre-wrap; font-family: inherit;">{{ entrada.contenido }}</pre>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-file-earmark-text" style="font-size: 3rem; color: #ccc;"></i>
+                        <p class="text-muted mt-3">No hay entradas en la historia clínica</p>
+                        <p class="text-muted">Use el formulario arriba para agregar la primera entrada</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Alertas y ayudas -->
+            <div class="alert alert-info mt-3">
+                <h6><i class="bi bi-lightbulb"></i> Consejos para las entradas:</h6>
+                <ul class="mb-0">
+                    <li>Cada entrada es independiente y puede ser editada solo por su autor</li>
+                    <li>Sea claro y conciso en sus anotaciones</li>
+                    <li>Use terminología médica apropiada</li>
+                    <li>Registre fecha y hora de cada evento importante</li>
+                    <li>Las entradas se ordenan por fecha descendente (más recientes primero)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Panel lateral de información -->
+        <div class="col-md-4">
+            <!-- Estadísticas de la historia -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="bi bi-graph-up"></i> Estadísticas</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Total de entradas:</span>
+                        <strong>{{ entradas|length }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Entradas propias:</span>
+                        <strong>{{ entradas|selectattr('autor_id', 'equalto', current_user.id)|list|length }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Última entrada:</span>
+                        <strong>{{ entradas[0].fecha.strftime('%d/%m/%Y') if entradas else 'Ninguna' }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Citas relacionadas -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="bi bi-calendar-check"></i> Citas del Paciente</h6>
+                </div>
+                <div class="card-body">
+                    {% if paciente.citas %}
+                        <div class="list-group list-group-flush">
+                            {% for cita in paciente.citas[:5] %}
+                            <div class="list-group-item px-0 py-2">
+                                <small>
+                                    <strong>{{ cita.fecha.strftime('%d/%m/%Y') }}</strong><br>
+                                    {{ cita.especialidad.nombre }}<br>
+                                    Dr(a). {{ cita.medico.nombre }}<br>
+                                    <span class="badge bg-{{ 'success' if cita.estado == 'Realizada' else 'warning' }}">
+                                        {{ cita.estado }}
+                                    </span>
+                                </small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if paciente.citas|length > 5 %}
+                        <small class="text-muted">Y {{ paciente.citas|length - 5 }} más...</small>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted mb-0">No hay citas registradas</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Acciones rápidas -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0"><i class="bi bi-lightning"></i> Acciones Rápidas</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('main.editar_paciente', id=paciente.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i> Editar Datos del Paciente
+                        </a>
+                        <a href="{{ url_for('main.crear_cita') }}?paciente_id={{ paciente.id }}" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-calendar-plus"></i> Agendar Nueva Cita
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+                            <i class="bi bi-printer"></i> Imprimir esta Página
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+@media print {
+    .card-header, .btn, .alert, .modal {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+
+<script>
+document.getElementById('formNuevaEntrada').addEventListener('submit', function() {
+    const btn = document.getElementById('btnAgregar');
+    const spinner = btn.querySelector('.spinner-border');
+    const icon = btn.querySelector('i');
+    btn.disabled = true;
+    spinner.classList.remove('d-none');
+    icon.classList.add('d-none');
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Guardando...';
+});
+
+function eliminarEntrada(entradaId, pacienteNombre) {
+    Swal.fire({
+        title: '¿Eliminar entrada?',
+        text: `¿Está seguro de eliminar esta entrada de la historia de ${pacienteNombre}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('formEliminar' + entradaId).submit();
+        }
+    });
+}
+</script>
+{% endblock %}
