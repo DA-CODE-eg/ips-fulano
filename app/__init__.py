@@ -18,6 +18,11 @@ def create_app():
         # Render usa postgres:// pero SQLAlchemy necesita postgresql://
         if DATABASE_URL.startswith('postgres://'):
             DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+        
+        # CAMBIO CLAVE: Para usar psycopg3 en lugar de psycopg2
+        if DATABASE_URL.startswith('postgresql://'):
+            DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+psycopg://', 1)
+        
         app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     else:
         # SQLite para desarrollo local
