@@ -13,16 +13,12 @@ def create_app():
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'ips-fulano-secreto-cambiar-en-produccion')
     
     # Base de datos - PostgreSQL en producción, SQLite en desarrollo
+    # SOLUCIÓN DEFINITIVA: Fuerza psycopg2 explícitamente
     DATABASE_URL = os.environ.get('DATABASE_URL')
     if DATABASE_URL:
-        # Render usa postgres:// pero SQLAlchemy necesita postgresql://
+        # Render usa postgres:// 
         if DATABASE_URL.startswith('postgres://'):
-            DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
-        
-        # CAMBIO CLAVE: Para usar psycopg3 en lugar de psycopg2
-        if DATABASE_URL.startswith('postgresql://'):
-            DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+psycopg://', 1)
-        
+            DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql+psycopg2://', 1)
         app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     else:
         # SQLite para desarrollo local
@@ -33,7 +29,7 @@ def create_app():
     # Inicializar extensiones
     db.init_app(app)
     login_manager.init_app(app)
-    login_manager.login_view = 'main.index'  # Cambiado de 'main.login' a 'main.index'
+    login_manager.login_view = 'main.index'
     login_manager.login_message = 'Por favor inicia sesión para acceder a esta página.'
     login_manager.login_message_category = 'warning'
 

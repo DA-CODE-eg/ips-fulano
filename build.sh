@@ -8,14 +8,11 @@ echo "🚀 Iniciando build..."
 
 # Actualizar pip
 echo "📦 Actualizando pip..."
-pip install --upgrade pip
+python -m pip install --upgrade pip
 
 # Instalar dependencias
 echo "📦 Instalando dependencias..."
 pip install -r requirements.txt
 
-# Inicializar la base de datos
-echo "🗄️  Inicializando base de datos..."
-python init_db.py
-
 echo "✅ Build completado exitosamente"
+# NOTA: NO ejecutamos init_db.py porque ya se ejecuta en app/__init__.py
