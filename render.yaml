@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: tu-app
+    runtime: python
+    pythonVersion: "3.12.8"  # ← Fuerza la versión aquí
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn app:app"
